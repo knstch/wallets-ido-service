@@ -7,6 +7,8 @@ import (
 
 const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
+// RandomString returns a cryptographically secure random string of the given length
+// using an alphanumeric alphabet.
 func RandomString(length int) (string, error) {
 	result := make([]byte, length)
 	for i := 0; i < length; i++ {

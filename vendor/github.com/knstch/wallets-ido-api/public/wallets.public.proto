@@ -1,0 +1,47 @@
+syntax = "proto3";
+package wallets.public;
+option go_package = "./";
+
+service Wallets {
+  rpc AddWallet(AddWalletRequest) returns (AddWalletResponse);
+  rpc VerifyWallet(VerifyWalletRequest) returns (VerifyWalletResponse);
+  rpc UnlinkWallet(UnlinkWalletRequest) returns (UnlinkWalletResponse);
+  rpc GetWallet(GetWalletRequest) returns (GetWalletResponse);
+}
+
+enum Provider {
+  PROVIDER_UNDEFINED = 0;
+  PROVIDER_PHANTOM = 1;
+}
+
+message AddWalletRequest {
+  string pubkey = 1;
+  Provider provider = 2;
+}
+
+message AddWalletResponse {
+  string challenge_id = 1;
+  string message_to_sign = 2;
+}
+
+message VerifyWalletRequest {
+  string challenge_id = 1;
+  string signature = 2;
+  string pubkey = 3;
+}
+
+message VerifyWalletResponse {}
+
+message UnlinkWalletRequest {
+  uint64 wallet_id = 1;
+}
+
+message UnlinkWalletResponse {}
+
+message GetWalletRequest {}
+
+message GetWalletResponse {
+  uint64 id = 1;
+  Provider provider = 2;
+  bool is_verified = 3;
+}

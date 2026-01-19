@@ -37,6 +37,15 @@ func buildMessageToSign(challengeID, pubkey, nonce string, expiresAt int64) stri
 	)
 }
 
+// AddWallet creates a wallet record for the user and returns a verification challenge.
+//
+// Behavior:
+//   - If the wallet is new, it is created in Postgres and the challenge is stored in Redis.
+//   - If the wallet already exists and is NOT verified, the service re-issues a new challenge (re-verify flow).
+//   - If the wallet already exists and is verified (or belongs to another user due to unique constraints),
+//     AddWallet returns svcerrs.ErrConflict.
+//
+// The returned MessageToSign must be signed by the wallet owner and then validated via VerifyWallet.
 func (s *ServiceImpl) AddWallet(ctx context.Context, userID uint, pubkey string, provider enum.Provider) (dto.ChallengeForUser, error) {
 	ctx, span := tracing.StartSpan(ctx, "wallets: AddWallet")
 	defer span.End()
@@ -63,28 +72,15 @@ func (s *ServiceImpl) AddWallet(ctx context.Context, userID uint, pubkey string,
 	}
 
 	if err = s.repo.Transaction(func(st repo.Repository) error {
-		if err = st.CreateWallet(ctx, userID, pubkey, provider); err != nil {
+		if err := st.CreateWallet(ctx, userID, pubkey, provider); err != nil {
+			// Bubble up conflict as-is so we can handle it outside the transaction.
 			if errors.Is(err, svcerrs.ErrConflict) {
-				isVerified := false
-				_, err = st.GetWallet(ctx, filters.WalletsFilter{
-					UserID:     userID,
-					Pubkey:     pubkey,
-					Provider:   provider,
-					IsVerified: &isVerified,
-				})
-				if err != nil {
-					if errors.Is(err, svcerrs.ErrDataNotFound) {
-						return fmt.Errorf("attempt to re-verify wallet: %w", svcerrs.ErrConflict)
-					} else {
-						return fmt.Errorf("st.GetWallet: %w", err)
-					}
-				}
-			} else {
-				return fmt.Errorf("st.CreateWallet: %w", err)
+				return svcerrs.ErrConflict
 			}
+			return fmt.Errorf("st.CreateWallet: %w", err)
 		}
 
-		if err = s.redis.Set(
+		if err := s.redis.Set(
 			ctx,
 			GetChallengeByIDKey(challengeID.String()),
 			jsonChallenge,
@@ -95,7 +91,31 @@ func (s *ServiceImpl) AddWallet(ctx context.Context, userID uint, pubkey string,
 
 		return nil
 	}); err != nil {
-		return dto.ChallengeForUser{}, fmt.Errorf("repo.Transaction: %w", err)
+		if errors.Is(err, svcerrs.ErrConflict) {
+			isVerified := false
+			if _, getErr := s.repo.GetWallet(ctx, filters.WalletsFilter{
+				UserID:     userID,
+				Pubkey:     pubkey,
+				Provider:   provider,
+				IsVerified: &isVerified,
+			}); getErr != nil {
+				if errors.Is(getErr, svcerrs.ErrDataNotFound) {
+					return dto.ChallengeForUser{}, fmt.Errorf("attempt to re-verify wallet: %w", svcerrs.ErrConflict)
+				}
+				return dto.ChallengeForUser{}, fmt.Errorf("repo.GetWallet: %w", getErr)
+			}
+
+			if err := s.redis.Set(
+				ctx,
+				GetChallengeByIDKey(challengeID.String()),
+				jsonChallenge,
+				challengeExpirationPeriod,
+			).Err(); err != nil {
+				return dto.ChallengeForUser{}, fmt.Errorf("redis.Set: %w", err)
+			}
+		} else {
+			return dto.ChallengeForUser{}, fmt.Errorf("repo.Transaction: %w", err)
+		}
 	}
 
 	return dto.ChallengeForUser{

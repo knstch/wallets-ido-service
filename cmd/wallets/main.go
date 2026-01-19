@@ -18,8 +18,6 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
-	"wallets-service/internal/connector/google"
-
 	"wallets-service/config"
 	"wallets-service/internal/endpoints/public"
 	"wallets-service/internal/wallets"
@@ -65,18 +63,13 @@ func run() error {
 		return fmt.Errorf("repo.NewDBRepo: %w", err)
 	}
 
-	googleClient, err := google.GetClient(cfg, logger)
-	if err != nil {
-		return fmt.Errorf("google.GetClient: %w", err)
-	}
-
 	dsnRedis, err := redis.ParseURL(cfg.GetRedisDSN())
 	if err != nil {
 		return err
 	}
 	redisClient := redis.NewClient(dsnRedis)
 
-	svc := wallets.NewService(logger, dbRepo, *cfg, googleClient, redisClient)
+	svc := wallets.NewService(logger, dbRepo, *cfg, redisClient)
 
 	publicController := public.NewController(svc, logger, cfg)
 	publicEndpoints := endpoints.InitHttpEndpoints(cfg.ServiceName, publicController.Endpoints())

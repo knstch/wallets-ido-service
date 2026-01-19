@@ -89,9 +89,9 @@ github.com/knstch/knstch-libs/prometeus
 github.com/knstch/knstch-libs/svcerrs
 github.com/knstch/knstch-libs/tracing
 github.com/knstch/knstch-libs/transport
-# github.com/knstch/users-ido-api v0.0.6
+# github.com/knstch/wallets-ido-api v0.0.2
 ## explicit; go 1.24.1
-github.com/knstch/users-ido-api/public
+github.com/knstch/wallets-ido-api/public
 # github.com/mfridman/interpolate v0.0.2
 ## explicit; go 1.19
 github.com/mfridman/interpolate

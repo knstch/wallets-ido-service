@@ -11,6 +11,9 @@ import (
 	"wallets-service/internal/wallets/models"
 )
 
+// CreateWallet creates a new wallet row.
+//
+// If a uniqueness constraint is violated, CreateWallet returns an error wrapping svcerrs.ErrConflict.
 func (r *DBRepo) CreateWallet(ctx context.Context, userID uint, pubkey string, provider enum.Provider) error {
 	ctx, span := tracing.StartSpan(ctx, "repo: CreateWallet")
 	defer span.End()

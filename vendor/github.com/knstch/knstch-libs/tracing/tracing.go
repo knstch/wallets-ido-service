@@ -17,6 +17,15 @@ import (
 
 var tracer trace.Tracer
 
+func getTracer() trace.Tracer {
+	// If InitTracer wasn't called (e.g. in unit/integration tests), fall back to
+	// the global OTel provider which defaults to a no-op implementation.
+	if tracer == nil {
+		return otel.Tracer("default")
+	}
+	return tracer
+}
+
 func InitTracer(serviceName, jaegerHost string) func(ctx context.Context) error {
 	exp, err := jaeger.New(
 		jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(jaegerHost)),
@@ -47,7 +56,7 @@ func WithTracing() endpoint.Middleware {
 			path, _ := ctx.Value(httptransport.ContextKeyRequestPath).(string)
 
 			spanName := fmt.Sprintf("%s %s", method, path)
-			ctx, span := tracer.Start(ctx, spanName)
+			ctx, span := getTracer().Start(ctx, spanName)
 			defer span.End()
 
 			return next(ctx, request)
@@ -56,5 +65,5 @@ func WithTracing() endpoint.Middleware {
 }
 
 func StartSpan(ctx context.Context, name string) (context.Context, trace.Span) {
-	return tracer.Start(ctx, name)
+	return getTracer().Start(ctx, name)
 }

@@ -32,15 +32,13 @@ services:
       context: docker/postgres
       dockerfile: postgres.Dockerfile
       shm_size: '256m'
-    image: users-ido-postgres:16.2
+    image: wallets-ido-postgres-test:16.2
     env_file:
       - test.env
     environment:
-      # For compose variable interpolation, env_file is NOT used.
-      # Keep test DB creds explicit so the container is deterministic.
-      POSTGRES_USER: users_test
+      POSTGRES_USER: wallets_test
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: users_test
+      POSTGRES_DB: wallets_test
       TZ: "Asia/Novosibirsk"
     ports:
       - 5433:5432
@@ -69,12 +67,12 @@ services:
     networks:
       - ido-net
   redis_test:
-    container_name: users-redis-test
+    container_name: wallets-redis-test
     restart: unless-stopped
     image: redis:7-alpine
-    command: [ "redis-server", "--save", "", "--appendonly", "no" ]
+    command: [ "redis-server", "--requirepass", "password", "--save", "", "--appendonly", "no" ]
     ports:
-      - 6380:6379
+      - 6381:6379
     volumes:
       - redis_test_data:/data
     networks:
@@ -102,13 +100,13 @@ services:
       - redis
 volumes:
   pg_data:
-    name: ido-pg_data
+    name: wallets-ido-pg_data
   pg_test_data:
-    name: ido-pg_test_data
+    name: wallets-ido-pg_test_data
   redis_test_data:
-    name: ido-redis_test_data
+    name: wallets-ido-redis_test_data
   redis_data:
-    name: ido-redis_data
+    name: wallets-ido-redis_data
 networks:
   ido-net:
     name: ido-net

@@ -15,6 +15,9 @@ import (
 	"wallets-service/internal/wallets/models"
 )
 
+// GetWallet returns a wallet matching the provided filters.
+//
+// If no wallet matches, GetWallet returns an error wrapping svcerrs.ErrDataNotFound.
 func (r *DBRepo) GetWallet(ctx context.Context, filters filters.WalletsFilter) (dto.Wallet, error) {
 	ctx, span := tracing.StartSpan(ctx, "repo: GetWallet")
 	defer span.End()

@@ -14,6 +14,9 @@ import (
 	"wallets-service/internal/wallets/models"
 )
 
+// VerifyWallet marks a wallet as verified by setting VerifiedAt to the current time.
+//
+// If no wallet matches the filter, VerifyWallet returns an error wrapping svcerrs.ErrDataNotFound.
 func (r *DBRepo) VerifyWallet(ctx context.Context, filter filters.WalletsFilter) error {
 	ctx, span := tracing.StartSpan(ctx, "repo: VerifyWallet")
 	defer span.End()

@@ -28,6 +28,7 @@ type Config struct {
 	RedisConfig RedisConfig
 }
 
+// DBConfig holds Postgres connection parameters.
 type DBConfig struct {
 	// Host is the database host.
 	Host string `envconfig:"PG_HOST"`
@@ -45,6 +46,7 @@ func (cfg *Config) GetDSN() string {
 		cfg.DBConfig.User, cfg.DBConfig.Password, cfg.DBConfig.Host, cfg.DBConfig.Port, cfg.DBConfig.User)
 }
 
+// RedisConfig holds Redis connection parameters.
 type RedisConfig struct {
 	// Host is the redis host.
 	Host string `envconfig:"REDIS_HOST"`

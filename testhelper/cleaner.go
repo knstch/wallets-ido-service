@@ -2,6 +2,9 @@ package testhelper
 
 import "gorm.io/gorm"
 
+// Cleaner is a small helper that resets DB state between integration tests.
+//
+// It is intentionally best-effort and should only be used in tests.
 type Cleaner struct {
 	db *gorm.DB
 }
@@ -17,7 +20,7 @@ func (s *Cleaner) Clean() error {
 		return nil
 	}
 
-	// Postgres: wipe all user-related tables for a clean slate between tests.
+	// Postgres: wipe all service tables for a clean slate between tests.
 	// Note: RESTART IDENTITY makes BIGSERIAL deterministic across tests.
-	return s.db.Exec("TRUNCATE TABLE access_tokens, wallets RESTART IDENTITY CASCADE").Error
+	return s.db.Exec("TRUNCATE TABLE user_wallets RESTART IDENTITY CASCADE").Error
 }

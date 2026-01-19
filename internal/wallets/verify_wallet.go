@@ -11,6 +11,7 @@ import (
 
 	"github.com/mr-tron/base58"
 
+	"github.com/knstch/knstch-libs/log"
 	"github.com/knstch/knstch-libs/svcerrs"
 	"github.com/knstch/knstch-libs/tracing"
 	"github.com/redis/go-redis/v9"
@@ -32,7 +33,7 @@ func verifySolanaSignMessage(pubkey string, messageToSign []byte, signature stri
 
 	pubKeyBytes, err := base58.Decode(pubkey)
 	if err != nil {
-		return false, fmt.Errorf("base58.Decode: %w", err)
+		return false, fmt.Errorf("base58.Decode: %w", errors.Join(err, svcerrs.ErrInvalidData))
 	}
 	if len(pubKeyBytes) != ed25519.PublicKeySize {
 		return false, fmt.Errorf("invalid pubkey length: got %d, want %d: %w", len(pubKeyBytes), ed25519.PublicKeySize, svcerrs.ErrInvalidData)
@@ -42,7 +43,7 @@ func verifySolanaSignMessage(pubkey string, messageToSign []byte, signature stri
 	if err != nil {
 		sigBytes, err = base64.RawURLEncoding.DecodeString(signature)
 		if err != nil {
-			return false, fmt.Errorf("base64.RawURLEncoding.DecodeString: %w", err)
+			return false, fmt.Errorf("base64.RawURLEncoding.DecodeString: %w", errors.Join(err, svcerrs.ErrInvalidData))
 		}
 	}
 	if len(sigBytes) != ed25519.SignatureSize {
@@ -53,6 +54,15 @@ func verifySolanaSignMessage(pubkey string, messageToSign []byte, signature stri
 	return ok, nil
 }
 
+// VerifyWallet validates a user's signature for a previously issued challenge and marks the wallet as verified.
+//
+// VerifyWallet:
+// - loads the challenge JSON from Redis by challengeID
+// - validates that it belongs to the user and is not expired
+// - rebuilds the original message and verifies the Solana ed25519 signature
+// - marks the wallet verified in Postgres
+//
+// On success it attempts to delete the Redis challenge key (best-effort).
 func (s *ServiceImpl) VerifyWallet(ctx context.Context, userID uint, challengeID, signature, pubkey string) error {
 	ctx, span := tracing.StartSpan(ctx, "wallets: VerifyWallet")
 	defer span.End()
@@ -89,22 +99,28 @@ func (s *ServiceImpl) VerifyWallet(ctx context.Context, userID uint, challengeID
 		return fmt.Errorf("solana signature is invalid: %w", svcerrs.ErrInvalidData)
 	}
 
-	isVerified := false
 	provider, err := enum.GetProvider(challenge.Provider)
 	if err != nil {
 		return fmt.Errorf("enum.GetProvider: %w", err)
 	}
 
+	isVerifiedFilter := false
 	if err = s.repo.VerifyWallet(ctx, filters.WalletsFilter{
 		UserID:     userID,
 		Pubkey:     challenge.PubKey,
 		Provider:   provider,
-		IsVerified: &isVerified,
+		IsVerified: &isVerifiedFilter,
 	}); err != nil {
 		return fmt.Errorf("repo.VerifyWallet: %w", err)
 	}
 
-	_ = s.redis.Del(ctx, GetChallengeByIDKey(challengeID)).Err()
+	// We don't want to fail verification after DB update if Redis deletion fails,
+	// but we also don't want to silently ignore the error.
+	if err := s.redis.Del(ctx, GetChallengeByIDKey(challengeID)).Err(); err != nil && !errors.Is(err, redis.Nil) {
+		s.lg.Error("redis.Del(challenge) failed", err,
+			log.AddMessage("challenge_id", challengeID),
+		)
+	}
 
 	return nil
 }

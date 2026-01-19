@@ -7,6 +7,12 @@ import (
 	"wallets-service/internal/wallets/models"
 )
 
+// WalletsFilter defines query parameters for selecting wallets.
+//
+// Zero values generally mean "no filter", except IsVerified which is tri-state:
+// - nil: don't filter by verification status
+// - true: only verified wallets
+// - false: only unverified wallets
 type WalletsFilter struct {
 	ID         uint
 	UserID     uint
@@ -15,8 +21,10 @@ type WalletsFilter struct {
 	IsVerified *bool
 }
 
+// BoolPtr is a tiny helper to get a *bool for filters.
 func BoolPtr(v bool) *bool { return &v }
 
+// ToScope converts the filter to a GORM scope.
 func (w *WalletsFilter) ToScope() func(*gorm.DB) *gorm.DB {
 	return func(tx *gorm.DB) *gorm.DB {
 		tx = tx.Model(&models.UserWallets{})

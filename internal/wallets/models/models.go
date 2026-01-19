@@ -12,6 +12,7 @@ type UserWallets struct {
 	UpdatedAt  time.Time
 }
 
+// TableName specifies the database table name used by GORM.
 func (UserWallets) TableName() string {
 	return "user_wallets"
 }

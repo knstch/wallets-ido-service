@@ -1,17 +1,19 @@
-package users_test
+package wallets_test
 
 import (
+	"crypto/ed25519"
+	"crypto/rand"
 	"encoding/base64"
-	"encoding/json"
-	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
+	"testing"
 
 	knlog "github.com/knstch/knstch-libs/log"
+	"github.com/mr-tron/base58"
 	"github.com/stretchr/testify/require"
 
-	"wallets-service/internal/wallets"
+	"github.com/knstch/knstch-libs/svcerrs"
 )
 
 func envOr(key, def string) string {
@@ -22,39 +24,10 @@ func envOr(key, def string) string {
 	return v
 }
 
-func mustExtractState(t *require.Assertions, loginURL string) string {
-	u, err := url.Parse(loginURL)
-	t.NoError(err)
-	state := u.Query().Get("state")
-	t.NotEmpty(state)
-	return state
-}
-
 func mustBase64Decode(t *require.Assertions, raw string) []byte {
 	b, err := base64.RawURLEncoding.DecodeString(raw)
 	t.NoError(err)
 	return b
-}
-
-func mustDecodeOAuthState(t *require.Assertions, state string) wallets.OAuthState {
-	var st wallets.OAuthState
-	err := json.Unmarshal(mustBase64Decode(t, state), &st)
-	t.NoError(err)
-	return st
-}
-
-func mustEncodeOAuthState(t *require.Assertions, st wallets.OAuthState) string {
-	b, err := json.Marshal(&st)
-	t.NoError(err)
-	return base64.RawURLEncoding.EncodeToString(b)
-}
-
-func makeFakeIDToken(t *require.Assertions, claims map[string]any) string {
-	header := base64.RawURLEncoding.EncodeToString([]byte(`{"alg":"none"}`))
-	payloadBytes, err := json.Marshal(claims)
-	t.NoError(err)
-	payload := base64.RawURLEncoding.EncodeToString(payloadBytes)
-	return header + "." + payload + ".sig"
 }
 
 func mustFindRepoRoot(t *require.Assertions) string {
@@ -80,4 +53,28 @@ func newTestLogger(serviceName string) *knlog.Logger {
 		serviceName = "test"
 	}
 	return knlog.NewLogger(serviceName, knlog.InfoLevel)
+}
+
+func mustGenerateSolanaKeypair(t *require.Assertions) (pubkeyBase58 string, priv ed25519.PrivateKey) {
+	// Solana pubkeys are base58-encoded 32-byte ed25519 public keys.
+	pub, priv, err := ed25519.GenerateKey(rand.Reader)
+	t.NoError(err)
+	return base58.Encode(pub), priv
+}
+
+func mustSignBase64(t *require.Assertions, priv ed25519.PrivateKey, msg string) string {
+	sig := ed25519.Sign(priv, []byte(msg))
+	return base64.StdEncoding.EncodeToString(sig)
+}
+
+func requireSvcErrIs(t *testing.T, err error, target error) {
+	t.Helper()
+	switch target {
+	case svcerrs.ErrDataNotFound, svcerrs.ErrConflict, svcerrs.ErrInvalidData:
+		// ok
+	default:
+		// also ok; keep generic
+	}
+	require.Error(t, err)
+	require.ErrorIs(t, err, target)
 }

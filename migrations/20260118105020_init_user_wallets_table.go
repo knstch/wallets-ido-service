@@ -21,6 +21,7 @@ func upInitUserWalletsTable(_ context.Context, tx *sql.Tx) error {
 			  verified_at TIMESTAMPTZ,
 			  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 			  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+			  deleted_at TIMESTAMPTZ NULL,
 			  UNIQUE(pubkey),
 			  UNIQUE(user_id, pubkey)
 			);

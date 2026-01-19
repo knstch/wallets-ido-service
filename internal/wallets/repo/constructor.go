@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// NewDBRepo constructs a DB-backed Repository implementation.
 func NewDBRepo(lg *log.Logger, db *gorm.DB) (*DBRepo, error) {
 	if lg == nil {
 		return nil, fmt.Errorf("nil logger")
