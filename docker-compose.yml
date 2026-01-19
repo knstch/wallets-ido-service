@@ -1,0 +1,115 @@
+services:
+  postgres:
+    container_name: wallets-postgres
+    restart: always
+    build:
+      context: docker/postgres
+      dockerfile: postgres.Dockerfile
+      shm_size: '256m'
+    image: wallets-ido-postgres:16.2
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      TZ: "Asia/Novosibirsk"
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 30s
+      timeout: 2s
+      retries: 2
+      start_period: 5s
+    ports:
+      - ${PG_EXTERNAL_PORT:-5432}:5432
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - ido-net
+  postgres_test:
+    container_name: wallets-postgres-test
+    restart: unless-stopped
+    build:
+      context: docker/postgres
+      dockerfile: postgres.Dockerfile
+      shm_size: '256m'
+    image: users-ido-postgres:16.2
+    env_file:
+      - test.env
+    environment:
+      # For compose variable interpolation, env_file is NOT used.
+      # Keep test DB creds explicit so the container is deterministic.
+      POSTGRES_USER: users_test
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: users_test
+      TZ: "Asia/Novosibirsk"
+    ports:
+      - 5433:5432
+    volumes:
+      - pg_test_data:/var/lib/postgresql/data
+    networks:
+      - ido-net
+    profiles: ["test"]
+  redis:
+    container_name: users-redis
+    restart: always
+    build:
+      context: docker/redis
+      dockerfile: redis.Dockerfile
+      args:
+        REDIS_PASSWORD: ${REDIS_PASSWORD}
+    image: redis:latest
+    ports:
+      - ${REDIS_EXTERNAL_PORT:-6379}:6379
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_USERNAME: ${REDIS_USERNAME}
+    volumes:
+      - redis_data:/data
+    command: [ "redis-server", "--requirepass", "password" ]
+    networks:
+      - ido-net
+  redis_test:
+    container_name: users-redis-test
+    restart: unless-stopped
+    image: redis:7-alpine
+    command: [ "redis-server", "--save", "", "--appendonly", "no" ]
+    ports:
+      - 6380:6379
+    volumes:
+      - redis_test_data:/data
+    networks:
+      - ido-net
+    profiles: [ "test" ]
+  app:
+    container_name: wallets-ido-app
+    restart: always
+    build:
+      context: .
+      dockerfile: docker/go-service/go.Dockerfile
+      args:
+        PORT: ${PUBLIC_HTTP_ADDR}
+    image: wallets-ido-app:latest
+    env_file:
+      - .env
+    environment:
+      - TZ=Asia/Novosibirsk
+    ports:
+      - ${PUBLIC_HTTP_ADDR}:${PUBLIC_HTTP_ADDR}
+    networks:
+      - ido-net
+    depends_on:
+      - postgres
+      - redis
+volumes:
+  pg_data:
+    name: ido-pg_data
+  pg_test_data:
+    name: ido-pg_test_data
+  redis_test_data:
+    name: ido-redis_test_data
+  redis_data:
+    name: ido-redis_data
+networks:
+  ido-net:
+    name: ido-net
+    driver: bridge
