@@ -62,7 +62,7 @@ func mustGenerateSolanaKeypair(t *require.Assertions) (pubkeyBase58 string, priv
 	return base58.Encode(pub), priv
 }
 
-func mustSignBase64(t *require.Assertions, priv ed25519.PrivateKey, msg string) string {
+func mustSignBase64(priv ed25519.PrivateKey, msg string) string {
 	sig := ed25519.Sign(priv, []byte(msg))
 	return base64.StdEncoding.EncodeToString(sig)
 }

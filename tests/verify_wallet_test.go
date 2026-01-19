@@ -20,7 +20,7 @@ func (s *WalletsServiceTestSuite) TestVerifyWallet_HappyPath() {
 	ch, err := s.svc.AddWallet(context.Background(), 1, pubkey, enum.ProviderPhantom)
 	t.NoError(err)
 
-	sig := mustSignBase64(t, priv, ch.MessageToSign)
+	sig := mustSignBase64(priv, ch.MessageToSign)
 	t.NoError(s.svc.VerifyWallet(context.Background(), 1, ch.ChallengeID, sig, pubkey))
 
 	// After success, challenge should be gone (best effort).
@@ -115,7 +115,7 @@ func (s *WalletsServiceTestSuite) TestVerifyWallet_InvalidSignature_InvalidData(
 	ch, err := s.svc.AddWallet(context.Background(), 1, pubkey, enum.ProviderPhantom)
 	t.NoError(err)
 
-	sig := mustSignBase64(t, priv, ch.MessageToSign+"tampered")
+	sig := mustSignBase64(priv, ch.MessageToSign+"tampered")
 	err = s.svc.VerifyWallet(context.Background(), 1, ch.ChallengeID, sig, pubkey)
 	requireSvcErrIs(s.T(), err, svcerrs.ErrInvalidData)
 }
@@ -137,7 +137,7 @@ func (s *WalletsServiceTestSuite) TestVerifyWallet_ExpiredChallenge_NotFound() {
 	t.NoError(err)
 	t.NoError(s.rdb.Set(context.Background(), wallets.GetChallengeByIDKey(ch.ChallengeID), b, time.Minute).Err())
 
-	sig := mustSignBase64(t, priv, ch.MessageToSign)
+	sig := mustSignBase64(priv, ch.MessageToSign)
 	err = s.svc.VerifyWallet(context.Background(), 1, ch.ChallengeID, sig, pubkey)
 	requireSvcErrIs(s.T(), err, svcerrs.ErrDataNotFound)
 }
@@ -158,7 +158,7 @@ func (s *WalletsServiceTestSuite) TestVerifyWallet_InvalidProviderInChallenge_Re
 	t.NoError(err)
 	t.NoError(s.rdb.Set(context.Background(), wallets.GetChallengeByIDKey(ch.ChallengeID), b, time.Minute).Err())
 
-	sig := mustSignBase64(t, priv, ch.MessageToSign)
+	sig := mustSignBase64(priv, ch.MessageToSign)
 	err = s.svc.VerifyWallet(context.Background(), 1, ch.ChallengeID, sig, pubkey)
 	t.Error(err)
 }
@@ -173,7 +173,7 @@ func (s *WalletsServiceTestSuite) TestVerifyWallet_WalletDeletedBeforeVerify_Not
 	t.NoError(err)
 	t.NoError(s.svc.UnlinkWallet(context.Background(), w.ID, 1))
 
-	sig := mustSignBase64(t, priv, ch.MessageToSign)
+	sig := mustSignBase64(priv, ch.MessageToSign)
 	err = s.svc.VerifyWallet(context.Background(), 1, ch.ChallengeID, sig, pubkey)
 	requireSvcErrIs(s.T(), err, svcerrs.ErrDataNotFound)
 }
@@ -184,11 +184,10 @@ func (s *WalletsServiceTestSuite) TestVerifyWallet_Replay_ReturnsNotFound() {
 	ch, err := s.svc.AddWallet(context.Background(), 1, pubkey, enum.ProviderPhantom)
 	t.NoError(err)
 
-	sig := mustSignBase64(t, priv, ch.MessageToSign)
+	sig := mustSignBase64(priv, ch.MessageToSign)
 	t.NoError(s.svc.VerifyWallet(context.Background(), 1, ch.ChallengeID, sig, pubkey))
 
 	// Second try with same challengeID should fail either at Redis (deleted) or at DB (already verified).
 	err = s.svc.VerifyWallet(context.Background(), 1, ch.ChallengeID, sig, pubkey)
 	requireSvcErrIs(s.T(), err, svcerrs.ErrDataNotFound)
 }
-

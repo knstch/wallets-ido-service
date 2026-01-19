@@ -69,10 +69,9 @@ func (s *WalletsServiceTestSuite) TestAddWallet_ConflictVerified_ReturnsConflict
 
 	ch, err := s.svc.AddWallet(context.Background(), 1, pubkey, enum.ProviderPhantom)
 	t.NoError(err)
-	sig := mustSignBase64(t, priv, ch.MessageToSign)
+	sig := mustSignBase64(priv, ch.MessageToSign)
 	t.NoError(s.svc.VerifyWallet(context.Background(), 1, ch.ChallengeID, sig, pubkey))
 
 	_, err = s.svc.AddWallet(context.Background(), 1, pubkey, enum.ProviderPhantom)
 	requireSvcErrIs(s.T(), err, svcerrs.ErrConflict)
 }
-
