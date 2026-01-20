@@ -13,6 +13,7 @@ import (
 
 	"wallets-service/internal/domain/dto"
 	"wallets-service/internal/domain/enum"
+	"wallets-service/internal/metrics"
 	"wallets-service/internal/wallets/filters"
 	"wallets-service/internal/wallets/repo"
 	"wallets-service/internal/wallets/utils"
@@ -47,6 +48,8 @@ func buildMessageToSign(challengeID, pubkey, nonce string, expiresAt int64) stri
 //
 // The returned MessageToSign must be signed by the wallet owner and then validated via VerifyWallet.
 func (s *ServiceImpl) AddWallet(ctx context.Context, userID uint, pubkey string, provider enum.Provider) (dto.ChallengeForUser, error) {
+	defer metrics.IncAddWallet()
+
 	ctx, span := tracing.StartSpan(ctx, "wallets: AddWallet")
 	defer span.End()
 
@@ -100,7 +103,7 @@ func (s *ServiceImpl) AddWallet(ctx context.Context, userID uint, pubkey string,
 				IsVerified: &isVerified,
 			}); getErr != nil {
 				if errors.Is(getErr, svcerrs.ErrDataNotFound) {
-					return dto.ChallengeForUser{}, fmt.Errorf("attempt to re-verify wallet: %w", svcerrs.ErrConflict)
+			return dto.ChallengeForUser{}, fmt.Errorf("attempt to re-verify wallet: %w", svcerrs.ErrConflict)
 				}
 				return dto.ChallengeForUser{}, fmt.Errorf("repo.GetWallet: %w", getErr)
 			}

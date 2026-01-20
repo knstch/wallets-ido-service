@@ -17,6 +17,7 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"wallets-service/internal/domain/enum"
+	"wallets-service/internal/metrics"
 	"wallets-service/internal/wallets/filters"
 )
 
@@ -64,6 +65,8 @@ func verifySolanaSignMessage(pubkey string, messageToSign []byte, signature stri
 //
 // On success it attempts to delete the Redis challenge key (best-effort).
 func (s *ServiceImpl) VerifyWallet(ctx context.Context, userID uint, challengeID, signature, pubkey string) error {
+	defer metrics.IncVerifyWallet()
+
 	ctx, span := tracing.StartSpan(ctx, "wallets: VerifyWallet")
 	defer span.End()
 
