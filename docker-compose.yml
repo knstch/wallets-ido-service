@@ -48,7 +48,7 @@ services:
       - ido-net
     profiles: ["test"]
   redis:
-    container_name: users-redis
+    container_name: wallets-redis
     restart: always
     build:
       context: docker/redis

@@ -11,8 +11,8 @@ FROM base AS final
 ARG PORT
 
 WORKDIR /app
-COPY --from=builder /build/users /build/.env ./
-COPY --from=builder /build/users ./
+COPY --from=builder /build/wallets /build/.env ./
+COPY --from=builder /build/wallets ./
 
 EXPOSE ${PUBLIC_HTTP_ADDR}
-CMD ["/app/users"]
+CMD ["/app/wallets"]
