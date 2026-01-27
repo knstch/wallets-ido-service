@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	defaultLog "log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,10 +16,16 @@ import (
 	"github.com/knstch/knstch-libs/log"
 	"github.com/knstch/knstch-libs/tracing"
 	"github.com/redis/go-redis/v9"
+	"golang.org/x/sync/errgroup"
+	"google.golang.org/grpc"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
+	privateApi "github.com/knstch/wallets-ido-api/private"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+
 	"wallets-service/config"
+	"wallets-service/internal/endpoints/private"
 	"wallets-service/internal/endpoints/public"
 	"wallets-service/internal/wallets"
 	"wallets-service/internal/wallets/repo"
@@ -39,7 +46,7 @@ func run() error {
 		return fmt.Errorf("filepath.Abs: %w", err)
 	}
 
-	if err := config.InitENV(dir); err != nil {
+	if err = config.InitENV(dir); err != nil {
 		return fmt.Errorf("config.InitENV: %w", err)
 	}
 
@@ -71,6 +78,25 @@ func run() error {
 
 	svc := wallets.NewService(logger, dbRepo, *cfg, redisClient)
 
+	privateController := private.NewController(svc, logger, cfg)
+
+	grpcServer := grpc.NewServer(
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
+	)
+
+	privateApi.RegisterWalletsPrivateServer(grpcServer, privateController)
+
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.PrivateGRPCAddr))
+	if err != nil {
+		return fmt.Errorf("net.Listen: %w", err)
+	}
+
+	g := errgroup.Group{}
+
+	g.Go(func() error {
+		return grpcServer.Serve(lis)
+	})
+
 	publicController := public.NewController(svc, logger, cfg)
 	publicEndpoints := endpoints.InitHttpEndpoints(cfg.ServiceName, publicController.Endpoints())
 
@@ -99,6 +125,10 @@ func run() error {
 
 	if err = srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		logger.Error("error serving", err)
+	}
+
+	if err = g.Wait(); err != nil {
+		return err
 	}
 
 	<-idleConnsClosed

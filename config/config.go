@@ -22,6 +22,8 @@ type Config struct {
 	// PublicHTTPAddr is the public HTTP server port.
 	PublicHTTPAddr string `envconfig:"PUBLIC_HTTP_ADDR"`
 
+	PrivateGRPCAddr string `envconfig:"PRIVATE_GRPC_ADDR"`
+
 	Environment string `envconfig:"ENVIRONMENT"`
 
 	DBConfig    DBConfig
