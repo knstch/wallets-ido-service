@@ -15,7 +15,6 @@ import (
 	"github.com/knstch/knstch-libs/endpoints"
 	"github.com/knstch/knstch-libs/log"
 	"github.com/knstch/knstch-libs/tracing"
-	"github.com/redis/go-redis/v9"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"gorm.io/driver/postgres"
@@ -70,13 +69,7 @@ func run() error {
 		return fmt.Errorf("repo.NewDBRepo: %w", err)
 	}
 
-	dsnRedis, err := redis.ParseURL(cfg.GetRedisDSN())
-	if err != nil {
-		return err
-	}
-	redisClient := redis.NewClient(dsnRedis)
-
-	svc := wallets.NewService(logger, dbRepo, *cfg, redisClient)
+	svc := wallets.NewService(logger, dbRepo, *cfg)
 
 	privateController := private.NewController(svc, logger, cfg)
 

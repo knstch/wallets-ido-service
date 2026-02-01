@@ -1,14 +1,12 @@
 package wallets_test
 
 import (
-	"context"
 	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/joho/godotenv"
 	knlog "github.com/knstch/knstch-libs/log"
-	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -30,7 +28,6 @@ type WalletsServiceTestSuite struct {
 	svc wallets.Service
 
 	db      *gorm.DB
-	rdb     *redis.Client
 	cleaner testhelper.Cleaner
 
 	logger *knlog.Logger
@@ -72,21 +69,15 @@ func (s *WalletsServiceTestSuite) SetupSuite() {
 	t.NoError(testhelper.RunMigrations(db))
 	s.cleaner = testhelper.NewCleaner(db)
 
-	dsnRedis, err := redis.ParseURL(cfg.GetRedisDSN())
-	t.NoError(err)
-	s.rdb = redis.NewClient(dsnRedis)
-	t.NoError(s.rdb.Ping(context.Background()).Err())
-
 	logger := newTestLogger(cfg.ServiceName)
 	dbRepo, err := repo.NewDBRepo(logger, db)
 	t.NoError(err)
 
 	s.logger = logger
 	s.dbRepo = dbRepo
-	s.svc = wallets.NewService(logger, dbRepo, cfg, s.rdb)
+	s.svc = wallets.NewService(logger, dbRepo, cfg)
 }
 
 func (s *WalletsServiceTestSuite) SetupTest() {
 	s.Require().NoError(s.cleaner.Clean())
-	s.Require().NoError(s.rdb.FlushDB(context.Background()).Err())
 }

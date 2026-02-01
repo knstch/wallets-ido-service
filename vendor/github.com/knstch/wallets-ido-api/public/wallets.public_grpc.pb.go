@@ -19,20 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Wallets_AddWallet_FullMethodName    = "/wallets.public.Wallets/AddWallet"
-	Wallets_VerifyWallet_FullMethodName = "/wallets.public.Wallets/VerifyWallet"
-	Wallets_UnlinkWallet_FullMethodName = "/wallets.public.Wallets/UnlinkWallet"
-	Wallets_GetWallet_FullMethodName    = "/wallets.public.Wallets/GetWallet"
+	Wallets_AddWallets_FullMethodName = "/wallets.public.Wallets/AddWallets"
 )
 
 // WalletsClient is the client API for Wallets service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type WalletsClient interface {
-	AddWallet(ctx context.Context, in *AddWalletRequest, opts ...grpc.CallOption) (*AddWalletResponse, error)
-	VerifyWallet(ctx context.Context, in *VerifyWalletRequest, opts ...grpc.CallOption) (*VerifyWalletResponse, error)
-	UnlinkWallet(ctx context.Context, in *UnlinkWalletRequest, opts ...grpc.CallOption) (*UnlinkWalletResponse, error)
-	GetWallet(ctx context.Context, in *GetWalletRequest, opts ...grpc.CallOption) (*GetWalletResponse, error)
+	AddWallets(ctx context.Context, in *AddWalletsRequest, opts ...grpc.CallOption) (*AddWalletsResponse, error)
 }
 
 type walletsClient struct {
@@ -43,40 +37,10 @@ func NewWalletsClient(cc grpc.ClientConnInterface) WalletsClient {
 	return &walletsClient{cc}
 }
 
-func (c *walletsClient) AddWallet(ctx context.Context, in *AddWalletRequest, opts ...grpc.CallOption) (*AddWalletResponse, error) {
+func (c *walletsClient) AddWallets(ctx context.Context, in *AddWalletsRequest, opts ...grpc.CallOption) (*AddWalletsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(AddWalletResponse)
-	err := c.cc.Invoke(ctx, Wallets_AddWallet_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *walletsClient) VerifyWallet(ctx context.Context, in *VerifyWalletRequest, opts ...grpc.CallOption) (*VerifyWalletResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(VerifyWalletResponse)
-	err := c.cc.Invoke(ctx, Wallets_VerifyWallet_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *walletsClient) UnlinkWallet(ctx context.Context, in *UnlinkWalletRequest, opts ...grpc.CallOption) (*UnlinkWalletResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(UnlinkWalletResponse)
-	err := c.cc.Invoke(ctx, Wallets_UnlinkWallet_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *walletsClient) GetWallet(ctx context.Context, in *GetWalletRequest, opts ...grpc.CallOption) (*GetWalletResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetWalletResponse)
-	err := c.cc.Invoke(ctx, Wallets_GetWallet_FullMethodName, in, out, cOpts...)
+	out := new(AddWalletsResponse)
+	err := c.cc.Invoke(ctx, Wallets_AddWallets_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -87,10 +51,7 @@ func (c *walletsClient) GetWallet(ctx context.Context, in *GetWalletRequest, opt
 // All implementations must embed UnimplementedWalletsServer
 // for forward compatibility.
 type WalletsServer interface {
-	AddWallet(context.Context, *AddWalletRequest) (*AddWalletResponse, error)
-	VerifyWallet(context.Context, *VerifyWalletRequest) (*VerifyWalletResponse, error)
-	UnlinkWallet(context.Context, *UnlinkWalletRequest) (*UnlinkWalletResponse, error)
-	GetWallet(context.Context, *GetWalletRequest) (*GetWalletResponse, error)
+	AddWallets(context.Context, *AddWalletsRequest) (*AddWalletsResponse, error)
 	mustEmbedUnimplementedWalletsServer()
 }
 
@@ -101,17 +62,8 @@ type WalletsServer interface {
 // pointer dereference when methods are called.
 type UnimplementedWalletsServer struct{}
 
-func (UnimplementedWalletsServer) AddWallet(context.Context, *AddWalletRequest) (*AddWalletResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddWallet not implemented")
-}
-func (UnimplementedWalletsServer) VerifyWallet(context.Context, *VerifyWalletRequest) (*VerifyWalletResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method VerifyWallet not implemented")
-}
-func (UnimplementedWalletsServer) UnlinkWallet(context.Context, *UnlinkWalletRequest) (*UnlinkWalletResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UnlinkWallet not implemented")
-}
-func (UnimplementedWalletsServer) GetWallet(context.Context, *GetWalletRequest) (*GetWalletResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetWallet not implemented")
+func (UnimplementedWalletsServer) AddWallets(context.Context, *AddWalletsRequest) (*AddWalletsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddWallets not implemented")
 }
 func (UnimplementedWalletsServer) mustEmbedUnimplementedWalletsServer() {}
 func (UnimplementedWalletsServer) testEmbeddedByValue()                 {}
@@ -134,74 +86,20 @@ func RegisterWalletsServer(s grpc.ServiceRegistrar, srv WalletsServer) {
 	s.RegisterService(&Wallets_ServiceDesc, srv)
 }
 
-func _Wallets_AddWallet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddWalletRequest)
+func _Wallets_AddWallets_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddWalletsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(WalletsServer).AddWallet(ctx, in)
+		return srv.(WalletsServer).AddWallets(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Wallets_AddWallet_FullMethodName,
+		FullMethod: Wallets_AddWallets_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WalletsServer).AddWallet(ctx, req.(*AddWalletRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Wallets_VerifyWallet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(VerifyWalletRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WalletsServer).VerifyWallet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Wallets_VerifyWallet_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WalletsServer).VerifyWallet(ctx, req.(*VerifyWalletRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Wallets_UnlinkWallet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UnlinkWalletRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WalletsServer).UnlinkWallet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Wallets_UnlinkWallet_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WalletsServer).UnlinkWallet(ctx, req.(*UnlinkWalletRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Wallets_GetWallet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetWalletRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(WalletsServer).GetWallet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Wallets_GetWallet_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WalletsServer).GetWallet(ctx, req.(*GetWalletRequest))
+		return srv.(WalletsServer).AddWallets(ctx, req.(*AddWalletsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -214,20 +112,8 @@ var Wallets_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*WalletsServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "AddWallet",
-			Handler:    _Wallets_AddWallet_Handler,
-		},
-		{
-			MethodName: "VerifyWallet",
-			Handler:    _Wallets_VerifyWallet_Handler,
-		},
-		{
-			MethodName: "UnlinkWallet",
-			Handler:    _Wallets_UnlinkWallet_Handler,
-		},
-		{
-			MethodName: "GetWallet",
-			Handler:    _Wallets_GetWallet_Handler,
+			MethodName: "AddWallets",
+			Handler:    _Wallets_AddWallets_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

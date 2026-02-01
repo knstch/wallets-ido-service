@@ -2,12 +2,12 @@ package wallets_test
 
 import (
 	"context"
-
-	"github.com/knstch/knstch-libs/svcerrs"
 )
 
-func (s *WalletsServiceTestSuite) TestGetWallet_NotFound() {
-	_, err := s.svc.GetWallet(context.Background(), 1)
-	requireSvcErrIs(s.T(), err, svcerrs.ErrDataNotFound)
+func (s *WalletsServiceTestSuite) TestGetWallets_NotFound() {
+	wallets, err := s.svc.GetWallets(context.Background(), 1)
+	t := s.Require()
+	t.NoError(err)
+	t.Empty(wallets)
 }
 

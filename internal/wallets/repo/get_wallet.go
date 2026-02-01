@@ -10,7 +10,6 @@ import (
 	"gorm.io/gorm"
 
 	"wallets-service/internal/domain/dto"
-	"wallets-service/internal/domain/enum"
 	"wallets-service/internal/wallets/filters"
 	"wallets-service/internal/wallets/models"
 )
@@ -30,16 +29,9 @@ func (r *DBRepo) GetWallet(ctx context.Context, filters filters.WalletsFilter) (
 		return dto.Wallet{}, err
 	}
 
-	provider, err := enum.GetProvider(wallet.Provider)
-	if err != nil {
-		return dto.Wallet{}, fmt.Errorf("enum.GetProvider: %w", err)
-	}
-
 	return dto.Wallet{
-		ID:         wallet.ID,
-		UserID:     wallet.UserID,
-		Pubkey:     wallet.Pubkey,
-		Provider:   provider,
-		VerifiedAt: wallet.VerifiedAt,
+		ID:     wallet.ID,
+		UserID: wallet.UserID,
+		Pubkey: wallet.Pubkey,
 	}, nil
 }

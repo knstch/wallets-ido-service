@@ -19,14 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	WalletsPrivate_GetWalletByUserID_FullMethodName = "/wallets.private.WalletsPrivate/GetWalletByUserID"
+	WalletsPrivate_GetWalletsByUserID_FullMethodName = "/wallets.private.WalletsPrivate/GetWalletsByUserID"
 )
 
 // WalletsPrivateClient is the client API for WalletsPrivate service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type WalletsPrivateClient interface {
-	GetWalletByUserID(ctx context.Context, in *GetWalletByUserIDRequest, opts ...grpc.CallOption) (*GetWalletByUserIDResponse, error)
+	GetWalletsByUserID(ctx context.Context, in *GetWalletsByUserIDRequest, opts ...grpc.CallOption) (*GetWalletsByUserIDResponse, error)
 }
 
 type walletsPrivateClient struct {
@@ -37,10 +37,10 @@ func NewWalletsPrivateClient(cc grpc.ClientConnInterface) WalletsPrivateClient {
 	return &walletsPrivateClient{cc}
 }
 
-func (c *walletsPrivateClient) GetWalletByUserID(ctx context.Context, in *GetWalletByUserIDRequest, opts ...grpc.CallOption) (*GetWalletByUserIDResponse, error) {
+func (c *walletsPrivateClient) GetWalletsByUserID(ctx context.Context, in *GetWalletsByUserIDRequest, opts ...grpc.CallOption) (*GetWalletsByUserIDResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetWalletByUserIDResponse)
-	err := c.cc.Invoke(ctx, WalletsPrivate_GetWalletByUserID_FullMethodName, in, out, cOpts...)
+	out := new(GetWalletsByUserIDResponse)
+	err := c.cc.Invoke(ctx, WalletsPrivate_GetWalletsByUserID_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (c *walletsPrivateClient) GetWalletByUserID(ctx context.Context, in *GetWal
 // All implementations must embed UnimplementedWalletsPrivateServer
 // for forward compatibility.
 type WalletsPrivateServer interface {
-	GetWalletByUserID(context.Context, *GetWalletByUserIDRequest) (*GetWalletByUserIDResponse, error)
+	GetWalletsByUserID(context.Context, *GetWalletsByUserIDRequest) (*GetWalletsByUserIDResponse, error)
 	mustEmbedUnimplementedWalletsPrivateServer()
 }
 
@@ -62,8 +62,8 @@ type WalletsPrivateServer interface {
 // pointer dereference when methods are called.
 type UnimplementedWalletsPrivateServer struct{}
 
-func (UnimplementedWalletsPrivateServer) GetWalletByUserID(context.Context, *GetWalletByUserIDRequest) (*GetWalletByUserIDResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetWalletByUserID not implemented")
+func (UnimplementedWalletsPrivateServer) GetWalletsByUserID(context.Context, *GetWalletsByUserIDRequest) (*GetWalletsByUserIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetWalletsByUserID not implemented")
 }
 func (UnimplementedWalletsPrivateServer) mustEmbedUnimplementedWalletsPrivateServer() {}
 func (UnimplementedWalletsPrivateServer) testEmbeddedByValue()                        {}
@@ -86,20 +86,20 @@ func RegisterWalletsPrivateServer(s grpc.ServiceRegistrar, srv WalletsPrivateSer
 	s.RegisterService(&WalletsPrivate_ServiceDesc, srv)
 }
 
-func _WalletsPrivate_GetWalletByUserID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetWalletByUserIDRequest)
+func _WalletsPrivate_GetWalletsByUserID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetWalletsByUserIDRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(WalletsPrivateServer).GetWalletByUserID(ctx, in)
+		return srv.(WalletsPrivateServer).GetWalletsByUserID(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: WalletsPrivate_GetWalletByUserID_FullMethodName,
+		FullMethod: WalletsPrivate_GetWalletsByUserID_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WalletsPrivateServer).GetWalletByUserID(ctx, req.(*GetWalletByUserIDRequest))
+		return srv.(WalletsPrivateServer).GetWalletsByUserID(ctx, req.(*GetWalletsByUserIDRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -112,8 +112,8 @@ var WalletsPrivate_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*WalletsPrivateServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetWalletByUserID",
-			Handler:    _WalletsPrivate_GetWalletByUserID_Handler,
+			MethodName: "GetWalletsByUserID",
+			Handler:    _WalletsPrivate_GetWalletsByUserID_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

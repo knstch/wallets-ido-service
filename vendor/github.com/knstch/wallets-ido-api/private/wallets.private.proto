@@ -3,21 +3,23 @@ package wallets.private;
 option go_package = "./";
 
 service WalletsPrivate {
-  rpc GetWalletByUserID(GetWalletByUserIDRequest) returns (GetWalletByUserIDResponse);
+  rpc GetWalletsByUserID(GetWalletsByUserIDRequest) returns (GetWalletsByUserIDResponse);
 }
 
-enum Provider {
-  PROVIDER_UNDEFINED = 0;
-  PROVIDER_PHANTOM = 1;
+message Wallet {
+  uint64 id = 1;
+  string pubkey = 2;
 }
 
-message GetWalletByUserIDRequest {
+message GetWalletsByUserIDRequest {
   uint64 user_id = 1;
 }
 
-message GetWalletByUserIDResponse {
-  uint64 id = 1;
-  string pubkey = 2;
-  Provider provider = 3;
-  bool is_verified = 4;
+message GetWalletsByUserIDResponse {
+  reserved 1, 2, 3, 4, 5;
+  reserved "provider";
+  reserved "is_verified";
+  reserved "pubkey";
+  reserved "pubkeys";
+  repeated Wallet wallets = 6;
 }

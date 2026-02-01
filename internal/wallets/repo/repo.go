@@ -10,7 +10,6 @@ import (
 	"gorm.io/gorm"
 
 	"wallets-service/internal/domain/dto"
-	"wallets-service/internal/domain/enum"
 	"wallets-service/internal/wallets/filters"
 )
 
@@ -24,10 +23,9 @@ type DBRepo struct {
 type Repository interface {
 	// Transaction runs fn inside a database transaction.
 	Transaction(fn func(st Repository) error) error
-	CreateWallet(ctx context.Context, userID uint, pubkey string, provider enum.Provider) error
+	CreateWallet(ctx context.Context, userID uint, pubkey string) error
 	GetWallet(ctx context.Context, filters filters.WalletsFilter) (dto.Wallet, error)
-	VerifyWallet(ctx context.Context, filter filters.WalletsFilter) error
-	DeleteWallet(ctx context.Context, filters filters.WalletsFilter) error
+	GetWallets(ctx context.Context, filters filters.WalletsFilter) ([]dto.Wallet, error)
 }
 
 // NewDBRepo returns a repository bound to the provided gorm.DB session.

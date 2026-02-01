@@ -17,13 +17,9 @@ func upInitUserWalletsTable(_ context.Context, tx *sql.Tx) error {
 			  id BIGSERIAL PRIMARY KEY,
 			  user_id BIGINT NOT NULL,
 			  pubkey TEXT NOT NULL,
-			  provider TEXT NOT NULL,
-			  verified_at TIMESTAMPTZ,
 			  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 			  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 			  deleted_at TIMESTAMPTZ NULL,
-			  UNIQUE(pubkey),
-			  UNIQUE(user_id, pubkey)
 			);
 `); err != nil {
 		return err

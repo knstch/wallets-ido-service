@@ -3,13 +3,11 @@ package models
 import "time"
 
 type UserWallets struct {
-	ID         uint
-	UserID     uint
-	Pubkey     string
-	Provider   string
-	VerifiedAt *time.Time
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	ID        uint
+	UserID    uint
+	Pubkey    string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 // TableName specifies the database table name used by GORM.
